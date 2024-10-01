@@ -2,8 +2,8 @@ import datetime
 import random
 import re
 
-from flask import Flask
-app = Flask(__name__)
+from flask import Fl
+app = Fl(__name__)
 cars_list=['Chevrolet' , 'Renault', 'Ford', 'Lada']
 cats_list = ['Корниш-рекс', 'Русская голубая', 'Шотландская вислоухая', 'Мейн-кун', 'Манчкин']
 war_and_peace = open('static/war_and_peace.txt', 'r', encoding='UTF-8').read()
