@@ -1,40 +1,40 @@
 import random
 import sqlite3
 
-
+# SQL commands to create tables for 'customer', 'manager', and 'order'
 CREATE_TABLES = """
-drop table if exists 'customer';
-create table 'customer' (
-    customer_id integer primary key autoincrement,
-    full_name varchar(50) not null,
-    city varchar(50) not null,
-    manager_id integer references manager(manager_id)
+DROP TABLE IF EXISTS 'customer';
+CREATE TABLE 'customer' (
+    customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name VARCHAR(50) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    manager_id INTEGER REFERENCES manager(manager_id)
 );
 
-drop table if exists 'manager';
-create table 'manager' (
-    manager_id integer primary key autoincrement,
-    full_name varchar(50) not null,
-    city varchar(50) not null
+DROP TABLE IF EXISTS 'manager';
+CREATE TABLE 'manager' (
+    manager_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name VARCHAR(50) NOT NULL,
+    city VARCHAR(50) NOT NULL
 );
 
-drop table if exists 'order';
-create table 'order' (
-    order_no integer primary key autoincrement,
-    purchase_amount integer not null,
-    date varchar(255) not null,
-    customer_id integer references customer(customer_id),
-    manager_id integer references manager(manager_id)
+DROP TABLE IF EXISTS 'order';
+CREATE TABLE 'order' (
+    order_no INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_amount INTEGER NOT NULL,
+    date VARCHAR(255) NOT NULL,
+    customer_id INTEGER REFERENCES customer(customer_id),
+    manager_id INTEGER REFERENCES manager(manager_id)
 );
 """
 
-
+# Function to generate random dates
 def _get_random_date() -> str:
     day = random.randint(1, 30)
     month = random.randint(1, 12)
     return f"2020-{month}-{day}"
 
-
+# Predefined list of Russian family names
 families = """Иванов
 Васильев
 Петров
@@ -61,21 +61,21 @@ families = """Иванов
 Никитин
 Соловьёв""".split()
 
+# Letters for generating random initials
 name_letters = "абвгдежзиклмнопрстуфхцчшщэюя".upper()
 
-
+# Function to generate random full names
 def _get_random_full_name() -> str:
     is_male = random.choice((True, False))
-
     family_name = random.choice(families)
+    
     if not is_male:
-        family_name += "а"
-
+        family_name += "а"  # Append 'а' for female names
+    
     first_letter, last_letter = random.choice(name_letters), random.choice(name_letters)
-
     return f"{family_name} {first_letter}.{last_letter}."
 
-
+# List of cities for random selection
 cities = """
 Москва
 Омск
@@ -92,60 +92,55 @@ cities = """
 Архангельск
 """.split()
 
-
+# Function to create and populate tables
 def prepare_tables():
     if __name__ == "__main__":
+        # Establish a connection to the database
         with sqlite3.connect("hw.db") as conn:
-
             cursor = conn.cursor()
+            # Create tables
             cursor.executescript(CREATE_TABLES)
             conn.commit()
+            
+            # Insert random managers into 'manager' table
             managers = [
-                (_get_random_full_name(), random.choice(cities))
+                (_get_random_full_name(), random.choice(cities)) 
                 for _ in range(30)
             ]
-            conn.executemany(
-                """
-                    insert into 'manager'(full_name, city)
-                    values (?, ?)
-                """,
-                managers
-            )
+            conn.executemany("""
+                INSERT INTO 'manager'(full_name, city) 
+                VALUES (?, ?)
+            """, managers)
 
+            # Insert random customers into 'customer' table
             customers = [
                 (
                     _get_random_full_name(),
                     random.choice(cities),
                     random.choice([i for i in range(1, 21)] + [None])
-                )
+                ) 
                 for _ in range(500)
             ]
-            conn.executemany(
-                """
-                    insert into 'customer'(full_name, city, manager_id)
-                    values(?, ?, ?)
-                """,
-                customers
-            )
+            conn.executemany("""
+                INSERT INTO 'customer'(full_name, city, manager_id) 
+                VALUES(?, ?, ?)
+            """, customers)
 
+            # Insert random orders into 'order' table
             orders = [
                 (
-                    random.randint(10, 1000),
-                    _get_random_date(),
-                    random.randint(1, 100),
-                    random.choice([i for i in range(1, 21)] + [None])
-                )
+                    random.randint(10, 1000),  # purchase amount
+                    _get_random_date(),        # random date
+                    random.randint(1, 100),    # random customer_id
+                    random.choice([i for i in range(1, 21)] + [None])  # manager_id or None
+                ) 
                 for _ in range(10000)
             ]
+            conn.executemany("""
+                INSERT INTO 'order'(purchase_amount, date, customer_id, manager_id) 
+                VALUES(?, ?, ?, ?)
+            """, orders)
 
-            conn.executemany(
-                """
-                    insert into 'order'(purchase_amount, date, customer_id, manager_id)
-                    values(?, ?, ?, ?)
-                """,
-                orders
-            )
-
-
+# Run the function to set up the tables and data
 if __name__ == '__main__':
     prepare_tables()
