@@ -1,42 +1,43 @@
 from threading import Semaphore, Thread
 import time
 
-sem: Semaphore = Semaphore()
+# Create a Semaphore object for thread synchronization
+sem = Semaphore()
+
+# Flag to stop the threads when needed
 stop_thread = False
-def fun1():
-    while True:
-        global stop_thread
-        if stop_thread:
-            break
-        sem.acquire()
-        print(1)
-        sem.release()
-        time.sleep(0.25)
 
+def print_1():
+    global stop_thread
+    while not stop_thread:
+        with sem:
+            print(1)
+        time.sleep(0.25)  # Pause for 0.25 seconds
 
-def fun2():
-    while True:
-        global stop_thread
-        if stop_thread:
-            break
-        sem.acquire()
-        print(2)
-        sem.release()
-        time.sleep(0.25)
+def print_2():
+    global stop_thread
+    while not stop_thread:
+        with sem:
+            print(2)
+        time.sleep(0.25)  # Pause for 0.25 seconds
 
+# Create threads that target the print_1 and print_2 functions
+thread_1 = Thread(target=print_1)
+thread_2 = Thread(target=print_2)
 
-t1: Thread = Thread(target=fun1)
-t2: Thread = Thread(target=fun2)
 try:
-    t1.start()
-    t2.start()
+    thread_1.start()  # Start thread 1
+    thread_2.start()  # Start thread 2
+
+    # Run an infinite loop until interrupted by the user (Ctrl+C)
     while True:
-        1 + 1
+        pass  # Keep the main thread alive
+
 except KeyboardInterrupt:
-    print('\nReceived keyboard interrupt, quitting threads.')
-    stop_thread = True
-    t1.join()
+    # Handle Ctrl+C (keyboard interrupt) and stop the threads
+    print('\nReceived keyboard interrupt, stopping threads...')
+    stop_thread = True  # Set the flag to stop both threads
+    thread_1.join()  # Wait for thread 1 to finish
     print('Thread 1 stopped!')
-    t2.join()
+    thread_2.join()  # Wait for thread 2 to finish
     print('Thread 2 stopped!')
-    exit(1)
